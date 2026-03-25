@@ -76,11 +76,11 @@ INSTALLED_APPS = [
     #add all your django apps here
     'drf_spectacular',
     #'guardian',    
-    'core',
-    'codelist',
-    'buildings',
-    'flowers',
-    'accidentes',
+    #'core',
+    #'codelist',
+    #'buildings',
+    #'flowers',
+    #'accidentes',
     'crop'
 ]
 
