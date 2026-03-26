@@ -3,11 +3,11 @@ import psycopg
 from psycopg.rows import dict_row
 
 # Parámetros de conexión de la Práctica 1
-DB_NAME = "exam"
-DB_USER = "postgres"
-DB_PASS = "postgres"
-DB_HOST = "postgis"
-DB_PORT = "5432"
+POSTGRES_NAME = "exam"
+POSTGRES_USER = "postgres"
+POSTGRES_PASS = "postgres"
+POSTGRES_HOST = "postgis"
+POSTGRES_PORT = "5432"
 
 # Parámetros p1Settings
 EPSG_CODE = 25830
@@ -16,11 +16,11 @@ TOLERANCE = 0.0001
 def connect():
     """Establece la conexión a la base de datos devolviendo diccionarios."""
     conn = psycopg.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        host=DB_HOST,
-        port=DB_PORT,
+        dbname=POSTGRES_NAME,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASS,
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
         row_factory=dict_row # Devuelve filas nativas como diccionarios
     )
     return conn
