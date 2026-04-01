@@ -19,6 +19,9 @@ class PlantasDJ(TablasDJ):
         if self._check_interior_intersection(wkb):
             return {'ok': False, 'message': 'Ya existe una planta en esta ubicación exacta'}
 
+        if not self._is_within(wkb, 'parcelas'):
+            return {'ok': False, 'message': 'La planta debe estar dentro de una parcela'}
+
         # 3. Guardar en la base de datos
         d['geom'] = g
         obj = self.model(**d)
@@ -41,6 +44,9 @@ class PlantasDJ(TablasDJ):
             # 3. Validar colisión excluyendo el ID actual
             if self._check_interior_intersection(wkb, exclude_id=d['id']):
                 return {'ok': False, 'message': 'La nueva ubicación ya está ocupada por otra planta'}
+
+            if not self._is_within(wkb, 'parcelas'):
+                return {'ok': False, 'message': 'La planta debe estar dentro de una parcela'}
 
             # 4. Actualizar campos
             obj.variedad = d.get('variedad', obj.variedad)
