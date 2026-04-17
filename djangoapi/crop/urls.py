@@ -1,16 +1,26 @@
-#from django.urls import path, include
-#from . import views
+from django.urls import path, include
+from rest_framework import routers
+from . import views
 
-#urlpatterns = [
-#    path("hello_world/", views.HelloWord.as_view(),name="hello_world"),
-#    path("get_flower_by_id/", views.Flower2.as_view(),name="get_flower_by_id"),
-#    path("insert_flower/", views.Flower2.as_view(),name="insert_flower"),
+router = routers.DefaultRouter()
+router.register(r'parcelas',    views.ParcelasModelViewSet, basename='parcelas')
+router.register(r'lineasriego', views.LineasRiegoModelViewSet, basename='lineasriego')
+router.register(r'plantas',     views.PlantasModelViewSet, basename='plantas')
 
-#    #post: insert
-#    #get: selectall
-#    path('flowers/<str:action>/', views.Flower.as_view(), name='buildings_views'),  # POST requests
-    
-#    #get: selectone/id/
-#    #post: delete/id/, update/id/
-#    path('flowers/<str:action>/<int:id>/', views.Flower.as_view(), name='buildings_views'),  # POST requests
-#]
+urlpatterns = [
+    path('hello_world/', views.HelloWorld.as_view(), name='crop_hello_world'),
+    path('', include(router.urls)),
+
+    # CRUD manual para Parcelas (mismo patrón que buildings_view)
+    # GET  /crop/parcelas_view/<action>/        → selectall
+    # GET  /crop/parcelas_view/<action>/<id>/   → selectone
+    # POST /crop/parcelas_view/insert/          → insert
+    # POST /crop/parcelas_view/update/<id>/     → update
+    # POST /crop/parcelas_view/delete/<id>/     → delete
+    path('parcelas_view/<str:action>/',        views.ParcelasView.as_view(), name='parcelas_view'),
+    path('parcelas_view/<str:action>/<int:id>/', views.ParcelasView.as_view(), name='parcelas_view_id'),
+    #path('lineasriego_view/<str:action>/',        views.LineasRiegoView.as_view(), name='lineasriego_view'),
+    #path('lineasriego_view/<str:action>/<int:id>/', views.LineasRiegoView.as_view(), name='lineasriego_view_id'),
+    #path('plantas_view/<str:action>/',        views.PlantasView.as_view(), name='plantas_view'),
+    #path('plantas_view/<str:action>/<int:id>/', views.PlantasView.as_view(), name='plantas_view_id'),
+]
