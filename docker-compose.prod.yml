@@ -70,12 +70,12 @@ services:
         - GROUP_ID=${DJANGOAPI_GROUP_ID}
         - USERNAME=${DJANGOAPI_USERNAME}
 
-    command: gunicorn djangoapi.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn djangoapi.wsgi:application --bind 0.0.0.0:8005
 #    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./djangoapi:/usr/src/app
     ports:
-      - 127.0.0.1:${GEOMATICAUPV_DOCKER_DJANGO_API_FORWARDED_PORT}:8000
+      - 127.0.0.1:${GEOMATICAUPV_DOCKER_DJANGO_API_FORWARDED_PORT}:8005
     env_file:
       - .env.prod
     networks:

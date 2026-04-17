@@ -9,7 +9,7 @@ router.register(r'plantas',     views.PlantasModelViewSet, basename='plantas')
 
 urlpatterns = [
     path('hello_world/', views.HelloWorld.as_view(), name='crop_hello_world'),
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
 
     # CRUD manual para Parcelas (mismo patrón que buildings_view)
     # GET  /crop/parcelas_view/<action>/        → selectall
