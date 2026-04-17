@@ -75,8 +75,8 @@ class LineasRiegoPOO(tablasPOO):
         finally:
             self.disconnect()
 
-    # SELECTASTUPLE
-    def selectAsTuple(self, d: dict):
+    # SELECTASTUPLEALL
+    def selectAsTupleAll(self, d: dict):
         id_min = d['id_min']
         cons = """
             SELECT id, material, diametro_pulg, estado, longitud_m,
@@ -91,14 +91,39 @@ class LineasRiegoPOO(tablasPOO):
             return rows
 
         except Exception as e:
-            print(f"Error en selectAsTuple de lineas de riego: {e}")
+            print(f"Error en selectAsTupleAll de lineas de riego: {e}")
             return []
 
         finally:
             self.disconnect()
 
-    # SELECTASDICT
-    def selectAsDict(self, d: dict):
+    # SELECTASTUPLE
+    def selectAsTuple(self, d: dict):
+        row_id = d['id']
+        cons = """
+            SELECT id, material, diametro_pulg, estado, longitud_m,
+                   ST_AsText(geom) AS geom_wkt
+            FROM lineas_riego
+            WHERE id = %s
+        """
+        try:
+            self.cur.execute(cons, [row_id])
+            row = self.cur.fetchone()
+            if row:
+                print("1 linea de riego encontrada.")
+            else:
+                print("Ninguna linea de riego encontrada con ese id.")
+            return row
+
+        except Exception as e:
+            print(f"Error en selectAsTuple de lineas de riego: {e}")
+            return None
+
+        finally:
+            self.disconnect()
+
+    # SELECTASDICTALL
+    def selectAsDictAll(self, d: dict):
         id_min = d['id_min']
         cons = """
             SELECT id, material, diametro_pulg, estado, longitud_m,
@@ -114,8 +139,34 @@ class LineasRiegoPOO(tablasPOO):
             return rows
 
         except Exception as e:
-            print(f"Error en selectAsDict de lineas de riego: {e}")
+            print(f"Error en selectAsDictAll de lineas de riego: {e}")
             return []
+
+        finally:
+            self.disconnect()
+
+    # SELECTASDICT
+    def selectAsDict(self, d: dict):
+        row_id = d['id']
+        cons = """
+            SELECT id, material, diametro_pulg, estado, longitud_m,
+                   ST_AsText(geom) AS geom_wkt
+            FROM lineas_riego
+            WHERE id = %s
+        """
+        try:
+            self.cur = self.conn.cursor(row_factory=dict_row)
+            self.cur.execute(cons, [row_id])
+            row = self.cur.fetchone()
+            if row:
+                print("1 linea de riego encontrada.")
+            else:
+                print("Ninguna linea de riego encontrada con ese id.")
+            return row
+
+        except Exception as e:
+            print(f"Error en selectAsDict de lineas de riego: {e}")
+            return None
 
         finally:
             self.disconnect()

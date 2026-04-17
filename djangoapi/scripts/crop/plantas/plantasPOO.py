@@ -13,6 +13,11 @@ class PlantasPOO(tablasPOO):
             self.disconnect()
             return None
 
+        if not self.is_within('parcelas', wkt):
+            print("Error: La planta debe estar dentro de una parcela.")
+            self.disconnect()
+            return None
+
         if self.has_interior_intersection('plantas', wkt):
             print("Error: El punto intersecta el interior de uno existente.")
             self.disconnect()
@@ -67,8 +72,8 @@ class PlantasPOO(tablasPOO):
         finally:
             self.disconnect()
 
-    # SELECTASTUPLE
-    def selectAsTuple(self, d: dict):
+    # SELECTASTUPLEALL
+    def selectAsTupleAll(self, d: dict):
         id_min = d['id_min']
         cons = """
             SELECT id, variedad, estado_salud, fecha_cosecha_est,
@@ -83,14 +88,39 @@ class PlantasPOO(tablasPOO):
             return rows
 
         except Exception as e:
-            print(f"Error en selectAsTuple de plantas: {e}")
+            print(f"Error en selectAsTupleAll de plantas: {e}")
             return []
 
         finally:
             self.disconnect()
 
-    # SELECTASDICT
-    def selectAsDict(self, d: dict):
+    # SELECTASTUPLE
+    def selectAsTuple(self, d: dict):
+        row_id = d['id']
+        cons = """
+            SELECT id, variedad, estado_salud, fecha_cosecha_est,
+                   ST_AsText(geom) AS geom_wkt
+            FROM plantas
+            WHERE id = %s
+        """
+        try:
+            self.cur.execute(cons, [row_id])
+            row = self.cur.fetchone()
+            if row:
+                print("1 planta encontrada.")
+            else:
+                print("Ninguna planta encontrada con ese id.")
+            return row
+
+        except Exception as e:
+            print(f"Error en selectAsTuple de plantas: {e}")
+            return None
+
+        finally:
+            self.disconnect()
+
+    # SELECTASDICTALL
+    def selectAsDictAll(self, d: dict):
         id_min = d['id_min']
         cons = """
             SELECT id, variedad, estado_salud, fecha_cosecha_est,
@@ -106,8 +136,34 @@ class PlantasPOO(tablasPOO):
             return rows
 
         except Exception as e:
-            print(f"Error en selectAsDict de plantas: {e}")
+            print(f"Error en selectAsDictAll de plantas: {e}")
             return []
+
+        finally:
+            self.disconnect()
+
+    # SELECTASDICT
+    def selectAsDict(self, d: dict):
+        row_id = d['id']
+        cons = """
+            SELECT id, variedad, estado_salud, fecha_cosecha_est,
+                   ST_AsText(geom) AS geom_wkt
+            FROM plantas
+            WHERE id = %s
+        """
+        try:
+            self.cur = self.conn.cursor(row_factory=dict_row)
+            self.cur.execute(cons, [row_id])
+            row = self.cur.fetchone()
+            if row:
+                print("1 planta encontrada.")
+            else:
+                print("Ninguna planta encontrada con ese id.")
+            return row
+
+        except Exception as e:
+            print(f"Error en selectAsDict de plantas: {e}")
+            return None
 
         finally:
             self.disconnect()
@@ -123,6 +179,11 @@ class PlantasPOO(tablasPOO):
 
         if not self.geom_isValid(wkt):
             print("Error: La geometria no es valida.")
+            self.disconnect()
+            return None
+
+        if not self.is_within('parcelas', wkt):
+            print("Error: La planta debe estar dentro de una parcela.")
             self.disconnect()
             return None
 

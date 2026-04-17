@@ -11,7 +11,7 @@ def run(*args):
     if len(args) != 2:
         print("Error: Se requieren 2 argumentos: <tableName> <functionName>")
         print("Tablas: parcelas | lineas_riego | plantas")
-        print("Funciones: insert | selectAll | selectAsDict | selectAsTuple | update | delete")
+        print("Funciones: insert | selectAll | selectAsDict | selectAsDictAll | selectAsTuple | selectAsTupleAll | update | delete")
         return
 
     tableName, functionName = args[0], args[1]
@@ -118,13 +118,21 @@ def run(*args):
         total = obj.selectAll(id_min=0)
         print(total)
 
+    elif functionName == "selectAsDictAll":
+        rows = obj.selectAsDictAll(id_min=0)
+        for r in rows: print(r)
+
     elif functionName == "selectAsDict":
-        rows = obj.selectAsDict(id_min=0)
+        row = obj.selectAsDict(_id=1)
+        print(row)
+
+    elif functionName == "selectAsTupleAll":
+        rows = obj.selectAsTupleAll(id_min=0)
         for r in rows: print(r)
 
     elif functionName == "selectAsTuple":
-        rows = obj.selectAsTuple(id_min=0)
-        for r in rows: print(r)
+        row = obj.selectAsTuple(_id=1)
+        print(row)
 
     elif functionName == "delete":
-        print(obj.delete({'id': 1}))
+        print(obj.delete({'id': 6}))
