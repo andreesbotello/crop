@@ -19,8 +19,8 @@ urlpatterns = [
     # POST /crop/parcelas_view/delete/<id>/     → delete
     path('parcelas_view/<str:action>/',        views.ParcelasView.as_view(), name='parcelas_view'),
     path('parcelas_view/<str:action>/<int:id>/', views.ParcelasView.as_view(), name='parcelas_view_id'),
-    #path('lineasriego_view/<str:action>/',        views.LineasRiegoView.as_view(), name='lineasriego_view'),
-    #path('lineasriego_view/<str:action>/<int:id>/', views.LineasRiegoView.as_view(), name='lineasriego_view_id'),
-    #path('plantas_view/<str:action>/',        views.PlantasView.as_view(), name='plantas_view'),
-    #path('plantas_view/<str:action>/<int:id>/', views.PlantasView.as_view(), name='plantas_view_id'),
+    path('lineasriego_view/<str:action>/',        views.LineasRiegoView.as_view(), name='lineasriego_view'),
+    path('lineasriego_view/<str:action>/<int:id>/', views.LineasRiegoView.as_view(), name='lineasriego_view_id'),
+    path('plantas_view/<str:action>/',        views.PlantasView.as_view(), name='plantas_view'),
+    path('plantas_view/<str:action>/<int:id>/', views.PlantasView.as_view(), name='plantas_view_id'),
 ]
