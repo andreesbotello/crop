@@ -36,5 +36,5 @@ urlpatterns = [
     path("accounts/logout/", custom_logout_view, name="logout"),
     path("accounts/", include("django.contrib.auth.urls")),
 
-    #path('crop/', include('crop.urls')),
+    path('crop/', include('crop.urls')),
 ]

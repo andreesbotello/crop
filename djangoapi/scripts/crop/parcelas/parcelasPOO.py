@@ -69,8 +69,8 @@ class ParcelasPOO(tablasPOO):
         finally:
             self.disconnect()
 
-    # SELECTASTUPLE
-    def selectAsTuple(self, d: dict):
+    # SELECTASTUPLEALL
+    def selectAsTupleAll(self, d: dict):
         id_min = d['id_min']
 
         cons = """
@@ -86,14 +86,40 @@ class ParcelasPOO(tablasPOO):
             return rows
 
         except Exception as e:
-            print(f"Error en selectAsTuple de parcelas: {e}")
+            print(f"Error en selectAsTupleAll de parcelas: {e}")
             return []
 
         finally:
             self.disconnect()
 
-    # SELECTASDICT
-    def selectAsDict(self, d: dict):
+    # SELECTASTUPLE
+    def selectAsTuple(self, d: dict):
+        row_id = d['id']
+
+        cons = """
+            SELECT id, dueno, area_m2, cultivo, fecha_siembra,
+                   ST_AsText(geom) AS geom_wkt
+            FROM parcelas
+            WHERE id = %s
+        """
+        try:
+            self.cur.execute(cons, [row_id])
+            row = self.cur.fetchone()
+            if row:
+                print("1 parcela encontrada.")
+            else:
+                print("Ninguna parcela encontrada con ese id.")
+            return row
+
+        except Exception as e:
+            print(f"Error en selectAsTuple de parcelas: {e}")
+            return None
+
+        finally:
+            self.disconnect()
+
+    # SELECTASDICTALL
+    def selectAsDictAll(self, d: dict):
         id_min = d['id_min']
 
         cons = """
@@ -110,8 +136,35 @@ class ParcelasPOO(tablasPOO):
             return rows
 
         except Exception as e:
-            print(f"Error en selectAsDict de parcelas: {e}")
+            print(f"Error en selectAsDictAll de parcelas: {e}")
             return []
+
+        finally:
+            self.disconnect()
+
+    # SELECTASDICT
+    def selectAsDict(self, d: dict):
+        row_id = d['id']
+
+        cons = """
+            SELECT id, dueno, area_m2, cultivo, fecha_siembra,
+                   ST_AsText(geom) AS geom_wkt
+            FROM parcelas
+            WHERE id = %s
+        """
+        try:
+            self.cur = self.conn.cursor(row_factory=dict_row)
+            self.cur.execute(cons, [row_id])
+            row = self.cur.fetchone()
+            if row:
+                print("1 parcela encontrada.")
+            else:
+                print("Ninguna parcela encontrada con ese id.")
+            return row
+
+        except Exception as e:
+            print(f"Error en selectAsDict de parcelas: {e}")
+            return None
 
         finally:
             self.disconnect()

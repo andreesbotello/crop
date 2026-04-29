@@ -17,6 +17,7 @@ class TablasDJ:
             query = "SELECT ST_SnapToGrid(ST_GeomFromText(%s, %s), %s)"
             cur.execute(query, [wkt, self.srid, self.precision])
             return cur.fetchone()[0]
+    ## TODO st_snap, no con todas solo las cercanas 
 
     def _check_interior_intersection(self, wkb_geom, exclude_id=None):
         """
@@ -35,11 +36,18 @@ class TablasDJ:
             cur.execute(query, params)
             return cur.fetchall()
 
+    def _is_within(self, wkb_geom, target_table_name):
+        """Verifica si la geometría (punto) está dentro de algún polígono de target_table_name."""
+        query = f"SELECT EXISTS (SELECT 1 FROM {target_table_name} WHERE ST_Within(%s, geom))"
+        with connection.cursor() as cur:
+            cur.execute(query, [wkb_geom])
+            return cur.fetchone()[0]
+
     def selectAll(self, id_min=0):
         """Retorna la cantidad de registros con id mayor al indicado."""
         return self.model.objects.filter(id__gt=id_min).count()
 
-    def selectAsDict(self, id_min=0):
+    def selectAsDictAll(self, id_min=0):
         """Retorna los registros como una lista de diccionarios con WKT."""
         qs = self.model.objects.filter(id__gt=id_min)
         resultados = []
@@ -55,7 +63,23 @@ class TablasDJ:
             resultados.append(d)
         return resultados
 
-    def selectAsTuple(self, id_min=0):
+    def selectAsDict(self, _id):
+        """Retorna un solo registro como diccionario."""
+        try:
+            obj = self.model.objects.get(id=_id)
+            d = model_to_dict(obj)
+            d['geom'] = obj.geom.wkt if obj.geom else None
+            for field in obj._meta.fields:
+                value = getattr(obj, field.name)
+                if isinstance(value, datetime):
+                    d[field.name] = value.strftime("%Y-%m-%d %H:%M:%S")
+                elif isinstance(value, date):
+                    d[field.name] = value.strftime("%Y-%m-%d")
+            return d
+        except self.model.DoesNotExist:
+            return None
+
+    def selectAsTupleAll(self, id_min=0):
         """Retorna los registros como una lista de tuplas con geometria en WKT."""
         qs = self.model.objects.filter(id__gt=id_min)
         resultados = []
@@ -75,6 +99,25 @@ class TablasDJ:
             resultados.append(tuple(fila))
 
         return resultados
+
+    def selectAsTuple(self, _id):
+        """Retorna un solo registro como tupla."""
+        try:
+            obj = self.model.objects.get(id=_id)
+            fila = []
+            for field in obj._meta.fields:
+                value = getattr(obj, field.name)
+                if isinstance(value, GEOSGeometry):
+                    fila.append(value.wkt if value else None)
+                elif isinstance(value, datetime):
+                    fila.append(value.strftime("%Y-%m-%d %H:%M:%S"))
+                elif isinstance(value, date):
+                    fila.append(value.strftime("%Y-%m-%d"))
+                else:
+                    fila.append(value)
+            return tuple(fila)
+        except self.model.DoesNotExist:
+            return None
 
     def delete(self, d: dict):
         """Elimina un registro por ID tras verificar su existencia."""

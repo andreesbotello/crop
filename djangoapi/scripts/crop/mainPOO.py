@@ -8,13 +8,13 @@ def main():
     if len(sys.argv) != 3:
         print("Uso: python mainPOO.py <tableName> <functionName>")
         print("  tableName   : parcelas | lineas_riego | plantas")
-        print("  functionName: insert | selectAll | selectAsTuple | selectAsDict | update | delete")
+        print("  functionName: insert | selectAll | selectAsTuple | selectAsTupleAll | selectAsDict | selectAsDictAll | update | delete")
         sys.exit(1)
 
     tableName, functionName = sys.argv[1], sys.argv[2]
 
     TABLES    = ["parcelas", "lineas_riego", "plantas"]
-    FUNCTIONS = ["insert", "selectAll", "selectAsTuple", "selectAsDict", "update", "delete"]
+    FUNCTIONS = ["insert", "selectAll", "selectAsTuple", "selectAsTupleAll", "selectAsDict", "selectAsDictAll", "update", "delete"]
 
     if tableName not in TABLES:
         print(f"Error: tabla '{tableName}' no válida. Opciones: {TABLES}")
@@ -45,15 +45,23 @@ def main():
         elif functionName == "selectAll":
             obj.selectAll({'id_min': 0})
 
+        elif functionName == "selectAsTupleAll":
+            rows = obj.selectAsTupleAll({'id_min': 0})
+            for r in rows:
+                print(r)
+
         elif functionName == "selectAsTuple":
-            rows = obj.selectAsTuple({'id_min': 0})
+            row = obj.selectAsTuple({'id': 1})
+            print(row)
+
+        elif functionName == "selectAsDictAll":
+            rows = obj.selectAsDictAll({'id_min': 0})
             for r in rows:
                 print(r)
 
         elif functionName == "selectAsDict":
-            rows = obj.selectAsDict({'id_min': 0})
-            for r in rows:
-                print(r)
+            row = obj.selectAsDict({'id': 1})
+            print(row)
 
         elif functionName == "update":
             d = {
@@ -96,15 +104,23 @@ def main():
         elif functionName == "selectAll":
             obj.selectAll({'id_min': 0})
 
+        elif functionName == "selectAsTupleAll":
+            rows = obj.selectAsTupleAll({'id_min': 0})
+            for r in rows:
+                print(r)
+
         elif functionName == "selectAsTuple":
-            rows = obj.selectAsTuple({'id_min': 0})
+            row = obj.selectAsTuple({'id': 1})
+            print(row)
+
+        elif functionName == "selectAsDictAll":
+            rows = obj.selectAsDictAll({'id_min': 0})
             for r in rows:
                 print(r)
 
         elif functionName == "selectAsDict":
-            rows = obj.selectAsDict({'id_min': 0})
-            for r in rows:
-                print(r)
+            row = obj.selectAsDict({'id': 1})
+            print(row)
 
         elif functionName == "update":
             d = {
@@ -142,15 +158,23 @@ def main():
         elif functionName == "selectAll":
             obj.selectAll({'id_min': 0})
 
+        elif functionName == "selectAsTupleAll":
+            rows = obj.selectAsTupleAll({'id_min': 0})
+            for r in rows:
+                print(r)
+
         elif functionName == "selectAsTuple":
-            rows = obj.selectAsTuple({'id_min': 0})
+            row = obj.selectAsTuple({'id': 1})
+            print(row)
+
+        elif functionName == "selectAsDictAll":
+            rows = obj.selectAsDictAll({'id_min': 0})
             for r in rows:
                 print(r)
 
         elif functionName == "selectAsDict":
-            rows = obj.selectAsDict({'id_min': 0})
-            for r in rows:
-                print(r)
+            row = obj.selectAsDict({'id': 1})
+            print(row)
 
         elif functionName == "update":
             d = {

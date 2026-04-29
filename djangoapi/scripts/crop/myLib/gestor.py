@@ -128,6 +128,16 @@ class tablasPOO():
         self.cur.execute(query, [row_id])
         return self.cur.fetchone()[0]
 
+    def is_within(self, table_name, geom_wkt):
+        query = f"""
+            SELECT EXISTS (
+                SELECT 1 FROM {table_name}
+                WHERE ST_Within(ST_GeomFromText(%s, %s), geom)
+            );
+        """
+        self.cur.execute(query, [geom_wkt, self.epsg])
+        return self.cur.fetchone()[0]
+
     def has_interior_intersection(self, table_name, geom_wkt):
         query = f"""
             SELECT EXISTS (
