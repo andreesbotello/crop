@@ -4,7 +4,6 @@ from django.views import View
 from django.forms.models import model_to_dict
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-import json
 import random
 import time
 
@@ -13,6 +12,9 @@ from rest_framework import viewsets, permissions
 from crop.models import Parcelas, LineasRiego, Plantas
 from crop.serializers import ParcelasSerializer, LineasRiegoSerializer, PlantasSerializer
 from core.myLib.baseDjangoView import BaseDjangoView
+from scripts.crop.DjangoModels.parcelas.parcelasDJ import ParcelasDJ
+from scripts.crop.DjangoModels.lineas_riego.lineas_riegoDJ import LineasRiegoDJ
+from scripts.crop.DjangoModels.plantas.plantasDJ import PlantasDJ
 
 class HelloWorld(View):
     def get(self, request):
@@ -69,6 +71,19 @@ class IsLoggedIn(View):
 
         return JsonResponse({"ok": False, "message": "You are not authenticated", "data": []}, status=400)
 
+
+def model_to_wkt_dict(obj):
+    data = model_to_dict(obj)
+    data['geom'] = obj.geom.wkt if obj.geom else None
+    return data
+
+
+def get_required_wkt(request):
+    wkt = request.POST.get('geom', None)
+    if not wkt:
+        return None, JsonResponse({'ok': False, 'message': 'La geometria WKT en el campo geom es obligatoria', 'data': []}, status=400)
+    return wkt, None
+
 #  Parcelas
 
 class ParcelasView(BaseDjangoView):
@@ -87,43 +102,51 @@ class ParcelasView(BaseDjangoView):
         l = list(Parcelas.objects.filter(id=id))
         if not l:
             return JsonResponse({'ok': False, 'message': f'La parcela {id} no existe', 'data': []}, status=404)
-        p = l[0]
-        data = model_to_dict(p)
-        if data.get('geom'):
-            data['geom'] = json.loads(p.geom.geojson)
+        data = model_to_wkt_dict(l[0])
         return JsonResponse({'ok': True, 'message': 'Parcela recuperada', 'data': [data]}, status=200)
 
     def selectall(self):
         data = []
         for p in Parcelas.objects.all():
-            p_dict = model_to_dict(p)
-            if p_dict.get('geom'):
-                p_dict['geom'] = json.loads(p.geom.geojson)
-            data.append(p_dict)
+            data.append(model_to_wkt_dict(p))
         return JsonResponse({'ok': True, 'message': 'Datos recuperados', 'data': data}, status=200)
 
     def insert(self, request):
-        dueno    = request.POST.get('dueno', '')
-        cultivo  = request.POST.get('cultivo', '')
-        p = Parcelas(dueno=dueno, cultivo=cultivo)
-        p.save()
-        p_dict = model_to_dict(p)
-        if p_dict.get('geom'):
-            p_dict['geom'] = json.loads(p.geom.geojson)
-        return JsonResponse({'ok': True, 'message': 'Parcela insertada', 'data': [p_dict]}, status=201)
+        geom, error = get_required_wkt(request)
+        if error:
+            return error
+
+        data = {
+            'dueno': request.POST.get('dueno', ''),
+            'cultivo': request.POST.get('cultivo', ''),
+            'fecha_siembra': request.POST.get('fecha_siembra') or None,
+            'geom': geom,
+        }
+        result = ParcelasDJ().insert(data)
+        if not result.get('ok'):
+            return JsonResponse({'ok': False, 'message': result.get('message'), 'data': []}, status=400)
+        p = Parcelas.objects.get(id=result['id'])
+        return JsonResponse({'ok': True, 'message': 'Parcela insertada', 'data': [model_to_wkt_dict(p)]}, status=201)
 
     def update(self, request, id):
         l = list(Parcelas.objects.filter(id=id))
         if not l:
             return JsonResponse({'ok': False, 'message': f'La parcela {id} no existe', 'data': []}, status=404)
-        p = l[0]
-        p.dueno   = request.POST.get('dueno', p.dueno)
-        p.cultivo = request.POST.get('cultivo', p.cultivo)
-        p.save()
-        p_dict = model_to_dict(p)
-        if p_dict.get('geom'):
-            p_dict['geom'] = json.loads(p.geom.geojson)
-        return JsonResponse({'ok': True, 'message': 'Parcela actualizada', 'data': [p_dict]}, status=200)
+        geom, error = get_required_wkt(request)
+        if error:
+            return error
+
+        data = {
+            'id': id,
+            'dueno': request.POST.get('dueno', l[0].dueno),
+            'cultivo': request.POST.get('cultivo', l[0].cultivo),
+            'geom': geom,
+        }
+        result = ParcelasDJ().update(data)
+        if not result.get('ok'):
+            return JsonResponse({'ok': False, 'message': result.get('message'), 'data': []}, status=400)
+        p = Parcelas.objects.get(id=id)
+        return JsonResponse({'ok': True, 'message': 'Parcela actualizada', 'data': [model_to_wkt_dict(p)]}, status=200)
 
     def delete(self, id):
         l = list(Parcelas.objects.filter(id=id))
@@ -149,51 +172,53 @@ class LineasRiegoView(BaseDjangoView):
         if not l:
             return JsonResponse({'ok': False, 'message': f'La linea de riego {id} no existe', 'data': []}, status=404)
         linea = l[0]
-        data = model_to_dict(linea)
-        if data.get('geom'):
-            data['geom'] = json.loads(linea.geom.geojson)
+        data = model_to_wkt_dict(linea)
         return JsonResponse({'ok': True, 'message': 'Linea de riego recuperada', 'data': [data]}, status=200)
 
     def selectall(self):
         data = []
         for linea in LineasRiego.objects.all():
-            linea_dict = model_to_dict(linea)
-            if linea_dict.get('geom'):
-                linea_dict['geom'] = json.loads(linea.geom.geojson)
-            data.append(linea_dict)
+            data.append(model_to_wkt_dict(linea))
         return JsonResponse({'ok': True, 'message': 'Datos recuperados', 'data': data}, status=200)
 
     def insert(self, request):
-        material = request.POST.get('material', '')
-        estado = request.POST.get('estado', '')
-        diametro_pulg = request.POST.get('diametro_pulg') or None
-        longitud_m = request.POST.get('longitud_m') or None
-        linea = LineasRiego(
-            material=material,
-            estado=estado,
-            diametro_pulg=diametro_pulg,
-            longitud_m=longitud_m,
-        )
-        linea.save()
-        linea_dict = model_to_dict(linea)
-        if linea_dict.get('geom'):
-            linea_dict['geom'] = json.loads(linea.geom.geojson)
-        return JsonResponse({'ok': True, 'message': 'Linea de riego insertada', 'data': [linea_dict]}, status=201)
+        geom, error = get_required_wkt(request)
+        if error:
+            return error
+
+        data = {
+            'material': request.POST.get('material', ''),
+            'estado': request.POST.get('estado', ''),
+            'diametro_pulg': request.POST.get('diametro_pulg') or None,
+            'geom': geom,
+        }
+        result = LineasRiegoDJ().insert(data)
+        if not result.get('ok'):
+            return JsonResponse({'ok': False, 'message': result.get('message'), 'data': []}, status=400)
+        linea = LineasRiego.objects.get(id=result['id'])
+        return JsonResponse({'ok': True, 'message': 'Linea de riego insertada', 'data': [model_to_wkt_dict(linea)]}, status=201)
 
     def update(self, request, id):
         l = list(LineasRiego.objects.filter(id=id))
         if not l:
             return JsonResponse({'ok': False, 'message': f'La linea de riego {id} no existe', 'data': []}, status=404)
+        geom, error = get_required_wkt(request)
+        if error:
+            return error
+
         linea = l[0]
-        linea.material = request.POST.get('material', linea.material)
-        linea.estado = request.POST.get('estado', linea.estado)
-        linea.diametro_pulg = request.POST.get('diametro_pulg', linea.diametro_pulg)
-        linea.longitud_m = request.POST.get('longitud_m', linea.longitud_m)
-        linea.save()
-        linea_dict = model_to_dict(linea)
-        if linea_dict.get('geom'):
-            linea_dict['geom'] = json.loads(linea.geom.geojson)
-        return JsonResponse({'ok': True, 'message': 'Linea de riego actualizada', 'data': [linea_dict]}, status=200)
+        data = {
+            'id': id,
+            'material': request.POST.get('material', linea.material),
+            'estado': request.POST.get('estado', linea.estado),
+            'diametro_pulg': request.POST.get('diametro_pulg', linea.diametro_pulg),
+            'geom': geom,
+        }
+        result = LineasRiegoDJ().update(data)
+        if not result.get('ok'):
+            return JsonResponse({'ok': False, 'message': result.get('message'), 'data': []}, status=400)
+        linea = LineasRiego.objects.get(id=id)
+        return JsonResponse({'ok': True, 'message': 'Linea de riego actualizada', 'data': [model_to_wkt_dict(linea)]}, status=200)
 
     def delete(self, id):
         l = list(LineasRiego.objects.filter(id=id))
@@ -218,48 +243,53 @@ class PlantasView(BaseDjangoView):
         if not l:
             return JsonResponse({'ok': False, 'message': f'La planta {id} no existe', 'data': []}, status=404)
         planta = l[0]
-        data = model_to_dict(planta)
-        if data.get('geom'):
-            data['geom'] = json.loads(planta.geom.geojson)
+        data = model_to_wkt_dict(planta)
         return JsonResponse({'ok': True, 'message': 'Planta recuperada', 'data': [data]}, status=200)
 
     def selectall(self):
         data = []
         for planta in Plantas.objects.all():
-            planta_dict = model_to_dict(planta)
-            if planta_dict.get('geom'):
-                planta_dict['geom'] = json.loads(planta.geom.geojson)
-            data.append(planta_dict)
+            data.append(model_to_wkt_dict(planta))
         return JsonResponse({'ok': True, 'message': 'Datos recuperados', 'data': data}, status=200)
 
     def insert(self, request):
-        variedad = request.POST.get('variedad', '')
-        estado_salud = request.POST.get('estado_salud', '')
-        fecha_cosecha_est = request.POST.get('fecha_cosecha_est') or None
-        planta = Plantas(
-            variedad=variedad,
-            estado_salud=estado_salud,
-            fecha_cosecha_est=fecha_cosecha_est,
-        )
-        planta.save()
-        planta_dict = model_to_dict(planta)
-        if planta_dict.get('geom'):
-            planta_dict['geom'] = json.loads(planta.geom.geojson)
-        return JsonResponse({'ok': True, 'message': 'Planta insertada', 'data': [planta_dict]}, status=201)
+        geom, error = get_required_wkt(request)
+        if error:
+            return error
+
+        data = {
+            'variedad': request.POST.get('variedad', ''),
+            'estado_salud': request.POST.get('estado_salud', ''),
+            'fecha_cosecha_est': request.POST.get('fecha_cosecha_est') or None,
+            'geom': geom,
+        }
+        result = PlantasDJ().insert(data)
+        if not result.get('ok'):
+            return JsonResponse({'ok': False, 'message': result.get('message'), 'data': []}, status=400)
+        planta = Plantas.objects.get(id=result['id'])
+        return JsonResponse({'ok': True, 'message': 'Planta insertada', 'data': [model_to_wkt_dict(planta)]}, status=201)
 
     def update(self, request, id):
         l = list(Plantas.objects.filter(id=id))
         if not l:
             return JsonResponse({'ok': False, 'message': f'La planta {id} no existe', 'data': []}, status=404)
+        geom, error = get_required_wkt(request)
+        if error:
+            return error
+
         planta = l[0]
-        planta.variedad = request.POST.get('variedad', planta.variedad)
-        planta.estado_salud = request.POST.get('estado_salud', planta.estado_salud)
-        planta.fecha_cosecha_est = request.POST.get('fecha_cosecha_est', planta.fecha_cosecha_est)
-        planta.save()
-        planta_dict = model_to_dict(planta)
-        if planta_dict.get('geom'):
-            planta_dict['geom'] = json.loads(planta.geom.geojson)
-        return JsonResponse({'ok': True, 'message': 'Planta actualizada', 'data': [planta_dict]}, status=200)
+        data = {
+            'id': id,
+            'variedad': request.POST.get('variedad', planta.variedad),
+            'estado_salud': request.POST.get('estado_salud', planta.estado_salud),
+            'fecha_cosecha_est': request.POST.get('fecha_cosecha_est', planta.fecha_cosecha_est),
+            'geom': geom,
+        }
+        result = PlantasDJ().update(data)
+        if not result.get('ok'):
+            return JsonResponse({'ok': False, 'message': result.get('message'), 'data': []}, status=400)
+        planta = Plantas.objects.get(id=id)
+        return JsonResponse({'ok': True, 'message': 'Planta actualizada', 'data': [model_to_wkt_dict(planta)]}, status=200)
 
     def delete(self, id):
         l = list(Plantas.objects.filter(id=id))

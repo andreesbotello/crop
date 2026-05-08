@@ -1,10 +1,11 @@
-from crop.models import Plantas
+from crop.models import Parcelas, Plantas
 from scripts.crop.DjangoModels.tablasDJ import TablasDJ
 from django.contrib.gis.geos import GEOSGeometry
 
 class PlantasDJ(TablasDJ):
     def __init__(self):
         super().__init__(Plantas)
+        self.parcelas_table = Parcelas._meta.db_table
 
     def insert(self, d: dict):
         """Inserta una nueva planta validando que no coincida con otra existente."""
@@ -19,7 +20,7 @@ class PlantasDJ(TablasDJ):
         if self._check_interior_intersection(wkb):
             return {'ok': False, 'message': 'Ya existe una planta en esta ubicación exacta'}
 
-        if not self._is_within(wkb, 'parcelas'):
+        if not self._is_within(wkb, self.parcelas_table):
             return {'ok': False, 'message': 'La planta debe estar dentro de una parcela'}
 
         # 3. Guardar en la base de datos
@@ -45,7 +46,7 @@ class PlantasDJ(TablasDJ):
             if self._check_interior_intersection(wkb, exclude_id=d['id']):
                 return {'ok': False, 'message': 'La nueva ubicación ya está ocupada por otra planta'}
 
-            if not self._is_within(wkb, 'parcelas'):
+            if not self._is_within(wkb, self.parcelas_table):
                 return {'ok': False, 'message': 'La planta debe estar dentro de una parcela'}
 
             # 4. Actualizar campos
