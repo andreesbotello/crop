@@ -35,7 +35,7 @@ TEMPLATE_ASSETS_URL=os.getenv('TEMPLATE_ASSETS_URL')#dirección de los archivos
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY','DKLSJGHFHF654165464kasdjhadkgf')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY','DKLSJGHFHF654165464kasdjhadkgf')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 REMOTE_DEBUG = False
@@ -188,6 +188,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATIC_ROOT = 'static_root/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
