@@ -3,6 +3,8 @@ from scripts.crop.DjangoModels.lineas_riego.lineas_riegoDJ import LineasRiegoDJ
 from scripts.crop.DjangoModels.plantas.plantasDJ import PlantasDJ
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 data_parcelas = [
     {'dueno': 'Juan Garcia', 'cultivo': 'Tomate', 'fecha_siembra': '2025-05-01 00:00:00', 'geom': 'POLYGON((711624.40527123969513923 4245616.46564004663378, 711750.30831353110261261 4245550.72788283508270979, 711735.15815491508692503 4245525.56468835100531578, 711612.21548844524659216 4245591.73779494967311621, 711624.40527123969513923 4245616.46564004663378))'},
@@ -23,15 +25,37 @@ data_lineas = [
 ]
 
 data_plantas = [
-    {'variedad': 'Olivo Arbequina', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-11-15 00:00:00', 'geom': 'POINT (711734.44366327999159694 4245527.8851424353197217)'},
-    {'variedad': 'Naranjo Valencia', 'estado_salud': 'Regular', 'fecha_cosecha_est': '2025-12-01 00:00:00', 'geom': 'POINT (711735.27940585731994361 4245529.55662759020924568)'},
-    {'variedad': 'Limonero Verna', 'estado_salud': 'Excelente', 'fecha_cosecha_est': '2025-10-20 00:00:00', 'geom': 'POINT (711736.11514843464829028 4245531.15213614702224731)'},
-    {'variedad': 'Almendro Marcona', 'estado_salud': 'Enfermo', 'fecha_cosecha_est': '2025-09-05 00:00:00', 'geom': 'POINT (711736.95089101197663695 4245532.6716681057587266)'},
-    {'variedad': 'Aguacate Hass', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-08-12 00:00:00', 'geom': 'POINT (711737.71065699146129191 4245534.1152234673500061)'},
-    {'variedad': 'Vid Moscatel', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-09-30 00:00:00', 'geom': 'POINT (711738.69835276470985264 4245535.93866181746125221)'}
+    {'variedad': 'Olivo Arbequina', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-11-15 00:00:00', 'geom': 'POINT(711734.44366327999159694 4245527.8851424353197217)'},
+    {'variedad': 'Naranjo Valencia', 'estado_salud': 'Regular', 'fecha_cosecha_est': '2025-12-01 00:00:00', 'geom': 'POINT(711735.27940585731994361 4245529.55662759020924568)'},
+    {'variedad': 'Limonero Verna', 'estado_salud': 'Excelente', 'fecha_cosecha_est': '2025-10-20 00:00:00', 'geom': 'POINT(711736.11514843464829028 4245531.15213614702224731)'},
+    {'variedad': 'Almendro Marcona', 'estado_salud': 'Enfermo', 'fecha_cosecha_est': '2025-09-05 00:00:00', 'geom': 'POINT(711736.95089101197663695 4245532.6716681057587266)'},
+    {'variedad': 'Aguacate Hass', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-08-12 00:00:00', 'geom': 'POINT(711737.71065699146129191 4245534.1152234673500061)'},
+    {'variedad': 'Vid Moscatel', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-09-30 00:00:00', 'geom': 'POINT(711738.69835276470985264 4245535.93866181746125221)'}
 ]
 
 
+
+def _aware_datetime(value):
+    if not isinstance(value, str):
+        return value
+
+    dt = parse_datetime(value)
+    if dt is None:
+        return value
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
+
+
+def _prepare_item(item):
+    data = item.copy()
+    for field_name in ('fecha_siembra', 'fecha_cosecha_est'):
+        if field_name in data:
+            data[field_name] = _aware_datetime(data[field_name])
+    return data
+
+
+def run(*args):
 def _aware_datetime(value):
     if not isinstance(value, str):
         return value
@@ -66,13 +90,19 @@ def run(*args):
     print("\nProcesando parcelas...")
     for item in data_parcelas:
         data = _prepare_item(item)
+        data = _prepare_item(item)
         # Ya no necesitamos pasar area_m2 pues ParcelasDJ la calcula desde la geom
+        res = p_api.insert(data)
+        print(f"Parcela de {data['dueno']}: {res}")
         res = p_api.insert(data)
         print(f"Parcela de {data['dueno']}: {res}")
 
     # 2. Carga de Líneas
     print("\nProcesando líneas de riego...")
     for item in data_lineas:
+        data = _prepare_item(item)
+        res = l_api.insert(data)
+        print(f"Línea {data['material']}: {res}")
         data = _prepare_item(item)
         res = l_api.insert(data)
         print(f"Línea {data['material']}: {res}")
@@ -83,8 +113,12 @@ def run(*args):
         data = _prepare_item(item)
         res = pl_api.insert(data)
         print(f"Planta {data['variedad']}: {res}")
+        data = _prepare_item(item)
+        res = pl_api.insert(data)
+        print(f"Planta {data['variedad']}: {res}")
 
     print("\n--- Carga masiva Django finalizada con éxito ---")
 
 if __name__ == "__main__":
     run()
+
