@@ -65,7 +65,7 @@ class BaseDjangoView(View):
         elif action == 'selectall':
             return self.selectall()
         else:            
-            return JsonResponse({"message": "Invalid operation option"}, status=400)
+            return JsonResponse({"message": "Invalid operation option", "method": request.method, "action": action, "path": request.path}, status=400)
 
     def post(self, request, *args, **kwargs):
         """Handles insert, update, and delete depending on the URL parameter."""
@@ -81,7 +81,7 @@ class BaseDjangoView(View):
             id = kwargs.get('id')
             return self.delete(id)
         else:
-            JsonResponse({"message": "Invalid operation option"}, status=400)
+            return JsonResponse({"message": "Invalid operation option", "method": request.method, "action": action, "path": request.path}, status=400)
     
     #GET OPERATIONS
     def selectone(self, id):
