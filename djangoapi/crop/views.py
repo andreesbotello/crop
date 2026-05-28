@@ -52,7 +52,7 @@ class LoginView(View):
 
 
 class LogoutView(LoginRequiredMixin, View):
-    login_url = "/crop/not_loggedin/"
+    login_url = 'crop_not_loggedin'
 
     def post(self, request, *args, **kwargs):
         username = request.user.username
@@ -91,7 +91,7 @@ def get_required_wkt(request):
 #  Parcelas
 
 class ParcelasView(LoginRequiredMixin, BaseDjangoView):
-    login_url = "/crop/not_loggedin/"
+    login_url = 'crop_not_loggedin'
 
     """
     View for Parcelas model.
@@ -173,7 +173,7 @@ class ParcelasModelViewSet(viewsets.ModelViewSet):
 
 #  Líneas de riego
 class LineasRiegoView(LoginRequiredMixin, BaseDjangoView):
-    login_url = "/crop/not_loggedin/"
+    login_url = 'crop_not_loggedin'
 
     def selectone(self, id):
         l = list(LineasRiego.objects.filter(id=id))
@@ -246,7 +246,7 @@ class LineasRiegoModelViewSet(viewsets.ModelViewSet):
 
 #  Plantas
 class PlantasView(LoginRequiredMixin, BaseDjangoView):
-    login_url = "/crop/not_loggedin/"
+    login_url = 'crop_not_loggedin'
 
     def selectone(self, id):
         l = list(Plantas.objects.filter(id=id))
