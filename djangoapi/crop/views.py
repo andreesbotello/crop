@@ -2,6 +2,10 @@
 from django.http import JsonResponse
 from django.views import View
 from django.forms.models import model_to_dict
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
+import random
+import time
 
 from rest_framework import viewsets, permissions
 
@@ -15,6 +19,61 @@ from scripts.crop.DjangoModels.plantas.plantasDJ import PlantasDJ
 class HelloWorld(View):
     def get(self, request):
         return JsonResponse({"ok": True, "message": "Crop. Hello world", "data": []})
+
+
+def notLoggedIn(request):
+    return JsonResponse({"ok": False, "message": "You are not logged in", "data": []}, status=400)
+
+
+class LoginView(View):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            username = request.user.username
+            return JsonResponse({
+                "ok": True,
+                "message": "The user {0} already is authenticated".format(username),
+                "data": [{"username": username}],
+            }, status=200)
+
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            login(request, user)
+            return JsonResponse({
+                "ok": True,
+                "message": "User {0} logged in".format(username),
+                "data": [{"username": username}],
+            }, status=200)
+
+        seconds = random.uniform(0, 1)
+        time.sleep(seconds)
+        return JsonResponse({"ok": False, "message": "Wrong user or password", "data": []}, status=400)
+
+
+class LogoutView(LoginRequiredMixin, View):
+    login_url = "/crop/not_loggedin/"
+
+    def post(self, request, *args, **kwargs):
+        username = request.user.username
+        logout(request)
+        return JsonResponse({
+            "ok": True,
+            "message": "The user {0} is now logged out".format(username),
+            "data": [],
+        }, status=200)
+
+
+class IsLoggedIn(View):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return JsonResponse({
+                "ok": True,
+                "message": "You are authenticated",
+                "data": [{"username": request.user.username}],
+            }, status=200)
+
+        return JsonResponse({"ok": False, "message": "You are not authenticated", "data": []}, status=400)
 
 
 def model_to_wkt_dict(obj):
@@ -31,7 +90,9 @@ def get_required_wkt(request):
 
 #  Parcelas
 
-class ParcelasView(BaseDjangoView):
+class ParcelasView(LoginRequiredMixin, BaseDjangoView):
+    login_url = "/crop/not_loggedin/"
+
     """
     View for Parcelas model.
 
@@ -111,7 +172,9 @@ class ParcelasModelViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
 
 #  Líneas de riego
-class LineasRiegoView(BaseDjangoView):
+class LineasRiegoView(LoginRequiredMixin, BaseDjangoView):
+    login_url = "/crop/not_loggedin/"
+
     def selectone(self, id):
         l = list(LineasRiego.objects.filter(id=id))
         if not l:
@@ -182,7 +245,9 @@ class LineasRiegoModelViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
 
 #  Plantas
-class PlantasView(BaseDjangoView):
+class PlantasView(LoginRequiredMixin, BaseDjangoView):
+    login_url = "/crop/not_loggedin/"
+
     def selectone(self, id):
         l = list(Plantas.objects.filter(id=id))
         if not l:
