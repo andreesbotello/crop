@@ -33,33 +33,9 @@ data_plantas = [
     {'variedad': 'Vid Moscatel', 'estado_salud': 'Bueno', 'fecha_cosecha_est': '2025-09-30 00:00:00', 'geom': 'POINT(711738.69835276470985264 4245535.93866181746125221)'}
 ]
 
-
-
 def _aware_datetime(value):
     if not isinstance(value, str):
         return value
-
-    dt = parse_datetime(value)
-    if dt is None:
-        return value
-    if timezone.is_naive(dt):
-        return timezone.make_aware(dt, timezone.get_current_timezone())
-    return dt
-
-
-def _prepare_item(item):
-    data = item.copy()
-    for field_name in ('fecha_siembra', 'fecha_cosecha_est'):
-        if field_name in data:
-            data[field_name] = _aware_datetime(data[field_name])
-    return data
-
-
-def run(*args):
-def _aware_datetime(value):
-    if not isinstance(value, str):
-        return value
-
     dt = parse_datetime(value)
     if dt is None:
         return value
@@ -78,8 +54,6 @@ def _prepare_item(item):
 
 def run(*args):
     """Función de entrada para runscript."""
-    
-    # Instanciamos nuestras clases controladoras
     p_api = ParcelasDJ()
     l_api = LineasRiegoDJ()
     pl_api = PlantasDJ()
@@ -90,19 +64,12 @@ def run(*args):
     print("\nProcesando parcelas...")
     for item in data_parcelas:
         data = _prepare_item(item)
-        data = _prepare_item(item)
-        # Ya no necesitamos pasar area_m2 pues ParcelasDJ la calcula desde la geom
-        res = p_api.insert(data)
-        print(f"Parcela de {data['dueno']}: {res}")
         res = p_api.insert(data)
         print(f"Parcela de {data['dueno']}: {res}")
 
     # 2. Carga de Líneas
     print("\nProcesando líneas de riego...")
     for item in data_lineas:
-        data = _prepare_item(item)
-        res = l_api.insert(data)
-        print(f"Línea {data['material']}: {res}")
         data = _prepare_item(item)
         res = l_api.insert(data)
         print(f"Línea {data['material']}: {res}")
@@ -113,12 +80,9 @@ def run(*args):
         data = _prepare_item(item)
         res = pl_api.insert(data)
         print(f"Planta {data['variedad']}: {res}")
-        data = _prepare_item(item)
-        res = pl_api.insert(data)
-        print(f"Planta {data['variedad']}: {res}")
 
     print("\n--- Carga masiva Django finalizada con éxito ---")
 
+
 if __name__ == "__main__":
     run()
-
